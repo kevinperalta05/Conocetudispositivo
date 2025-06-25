@@ -1,5 +1,3 @@
-# Conocetudispositivo
-Actividad gamificada para alfabetización digital
 <!DOCTYPE html>
 <html lang="es">
 <head>
