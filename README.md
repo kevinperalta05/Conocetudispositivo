@@ -11,28 +11,46 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f0f0; /* Light background similar to image */
+            background-color: #1a1a1a; /* Dark background for all pages */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
         }
-        .simulator-container, .initial-screen {
-            background-color: #fff;
+        .simulator-container, .activities-section {
+            background-color: #2d2d2d; /* Slightly lighter dark background for containers */
             border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); /* Darker shadow */
             padding: 30px;
             max-width: 800px;
             width: 100%;
             text-align: center;
             transition: all 0.3s ease-in-out;
-            border: 2px solid #ddd;
+            border: 2px solid #444; /* Darker border */
+            color: #e0e0e0; /* Light text for readability */
+        }
+        .initial-screen {
+            background-color: #000; /* Black background for the initial screen */
+            color: #fff; /* White text for the initial screen */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .initial-screen h2 {
+            color: #fff; /* White color for the title */
         }
         .formula {
             font-size: 3.5rem; /* Larger font size for the formula */
             font-weight: bold;
-            color: #00008B; /* Dark blue color for V and R, similar to image */
+            color: #ADD8E6; /* Light blue for V and R */
             margin-bottom: 30px;
             display: flex;
             justify-content: center;
@@ -41,7 +59,7 @@
         }
         .formula span {
             font-size: 2.5rem; /* Smaller for I and operators */
-            color: #333;
+            color: #E0E0E0; /* Light gray for I and operators */
         }
         .slider-group {
             display: flex;
@@ -53,13 +71,13 @@
         .slider-group label {
             font-weight: bold;
             margin-bottom: 10px;
-            color: #4A5568;
+            color: #E0E0E0; /* Light gray for labels */
             font-size: 1.1rem;
         }
         input[type="range"] {
             width: 80%;
             height: 8px;
-            background: #cbd5e0;
+            background: #555; /* Darker track */
             border-radius: 5px;
             outline: none;
             -webkit-appearance: none;
@@ -73,36 +91,36 @@
             width: 25px;
             height: 25px;
             border-radius: 50%;
-            background: #4C51BF; /* Deeper blue for thumb */
+            background: #FF8C00; /* Darker orange/gold for thumb */
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            border: 3px solid #fff; /* White border on thumb */
+            border: 3px solid #ccc; /* Lighter border on thumb */
         }
         input[type="range"]::-moz-range-thumb {
             width: 25px;
             height: 25px;
             border-radius: 50%;
-            background: #4C51BF;
+            background: #FF8C00;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            border: 3px solid #fff;
+            border: 3px solid #ccc;
         }
         .result-display {
-            background-color: #e2e8f0; /* Light grey background for result */
+            background-color: #444; /* Darker background for result */
             padding: 20px;
             border-radius: 10px;
             margin-top: 30px;
             font-size: 2rem;
             font-weight: bold;
-            color: #2D3748;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+            color: #FFD700; /* Gold color for result text */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 90px; /* Fixed height for consistent look */
         }
         .btn {
-            background-color: #4C51BF; /* Primary button color */
+            background-color: #4C51BF; /* Primary button color (kept for contrast) */
             color: white;
             padding: 12px 25px;
             border-radius: 8px;
@@ -110,7 +128,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* Darker shadow */
             border: none;
             margin: 0 10px;
         }
@@ -120,21 +138,21 @@
         }
         .btn:active {
             transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         .warning-icon {
-            color: #EF4444; /* Red for warning */
+            color: #EF4444; /* Red for warning (kept vibrant) */
             font-size: 1.2rem;
             margin-left: 10px;
             vertical-align: middle;
         }
-        /* Circuit diagram styles - simplified SVG based on the image */
+        /* Circuit diagram styles */
         .circuit-diagram {
             width: 100%;
             max-width: 300px;
             margin: 0 auto 30px auto;
-            border: 2px solid #333; /* Border around the circuit area */
-            background-color: #fff; /* White background for circuit */
+            border: 2px solid #888; /* Lighter border for circuit */
+            background-color: #444; /* Darker background for circuit */
             border-radius: 10px;
             padding: 15px;
         }
@@ -144,40 +162,40 @@
             display: block;
         }
         .wire {
-            stroke: #333;
+            stroke: #ccc; /* Lighter wires */
             stroke-width: 4;
             fill: none;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
         .battery-cell {
-            fill: #7C7C7C; /* Grey for battery cells */
-            stroke: #333;
+            fill: #666; /* Adjusted grey for battery cells */
+            stroke: #ccc;
             stroke-width: 2;
         }
         .battery-terminal {
-            stroke: #333;
+            stroke: #ccc;
             stroke-width: 2;
             fill: none;
         }
         .battery-label {
             font-size: 12px;
             font-weight: bold;
-            fill: #333;
+            fill: #eee; /* Lighter text for labels */
         }
         .resistor {
-            fill: #A0522D; /* Sienna color for resistor body */
-            stroke: #333;
+            fill: #CD853F; /* Peruvian (earthy orange) for resistor body */
+            stroke: #ccc;
             stroke-width: 2;
             border-radius: 5px;
         }
         .current-text {
             font-size: 1.2rem;
             font-weight: bold;
-            fill: #000;
+            fill: #FFD700; /* Gold for current text */
         }
         .animated-dots {
-            fill: #EF4444; /* Red dots for current */
+            fill: #EF4444; /* Red dots for current (kept vibrant) */
             animation: current-flow 2s linear infinite;
         }
         @keyframes current-flow {
@@ -189,7 +207,7 @@
             }
         }
         .label-box {
-            fill: #ffe0b3; /* Light orange background for current text */
+            fill: #604020; /* Darker orange/brown background for current text */
             stroke: #ff9800; /* Darker orange border */
             stroke-width: 2;
             rx: 5;
@@ -198,18 +216,8 @@
         .value-display {
             font-size: 0.9rem;
             font-weight: bold;
-            fill: #333;
+            fill: #eee; /* Lighter text for values */
             text-anchor: middle;
-        }
-        .activities-section {
-            background-color: #fff;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            max-width: 800px;
-            width: 100%;
-            text-align: center;
-            border: 2px solid #ddd;
         }
         .activities-list {
             list-style: none;
@@ -217,65 +225,158 @@
             margin-top: 20px;
         }
         .activities-list li {
-            background-color: #f8f8f8;
-            border: 1px solid #eee;
+            background-color: #333; /* Darker background for list items */
+            border: 1px solid #555; /* Darker border */
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 10px;
             text-align: left;
             font-size: 1.1rem;
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            color: #e0e0e0; /* Light text for readability */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Darker shadow */
         }
         .activities-list li strong {
-            color: #4C51BF;
+            color: #FFD700; /* Gold for strong text in list */
         }
-        .user-info {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #e2e8f0;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: #2D3748;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 10;
+        .initial-screen .main-logo-svg {
+            width: 90%; /* Make it responsive */
+            max-width: 500px; /* Max width for larger screens */
+            height: auto;
+            margin-bottom: 10px; /* Reduced margin to bring closer to triangle */
+            /* Adjusted for perceived centering */
+            transform: translateX(-2%); /* Shift left by 2% of its own width */
         }
-        .initial-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        .initial-screen .main-logo-svg text {
+            font-family: 'Inter', sans-serif; /* Ensure font is applied to SVG text */
+            font-weight: bold;
+            fill: #FFD700; /* Gold color for main title */
         }
-        .initial-screen input[type="text"] {
-            padding: 12px 20px;
-            margin-bottom: 20px;
-            border: 2px solid #cbd5e0;
-            border-radius: 8px;
-            width: 70%;
-            max-width: 300px;
-            font-size: 1.1rem;
-            text-align: center;
+        .initial-screen .main-logo-svg text.subtitle {
+            font-size: 14px; /* Smaller for the new, longer subtitle */
+            fill: #A9A9A9; /* Darker grey for subtitle */
         }
+        /* Style for the gradient line in the SVG */
+        .gradient-line {
+            stroke-width: 10;
+            stroke-linecap: round;
+        }
+        /* Specific gradient definition */
         .initial-screen .btn {
-            margin-top: 20px;
-            width: auto;
+            background-color: #4C51BF; /* Keep original button style */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+        .initial-screen .btn:hover {
+            background-color: #363b96;
+            transform: translateY(-2px);
+        }
+
+        /* Styles for the Ohm's Law Triangle Animation */
+        .ohm-triangle-container {
+            width: 200px; /* Size of the triangle animation */
+            height: 180px;
+            margin-bottom: 20px;
+            overflow: visible; /* Allow overflow for animated elements */
+        }
+
+        .ohm-triangle-base {
+            stroke: #ccc;
+            stroke-width: 4;
+            fill: none;
+        }
+
+        .ohm-triangle-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            font-size: 40px;
+            text-anchor: middle;
+            fill: #FFD700; /* Gold color for V, I, R letters */
+        }
+
+        .ohm-triangle-divider {
+            stroke: #888;
+            stroke-width: 2;
+        }
+
+        .current-dot {
+            fill: #EF4444; /* Red color for the moving dot */
+            animation: move-dot 4s linear infinite;
+        }
+
+        @keyframes move-dot {
+            0% {
+                cx: 100; cy: 10; /* Top vertex */
+            }
+            33.33% {
+                cx: 190; cy: 170; /* Bottom-right vertex */
+            }
+            66.66% {
+                cx: 10; cy: 170; /* Bottom-left vertex */
+            }
+            100% {
+                cx: 100; cy: 10; /* Back to top vertex */
+            }
+        }
+
+        /* Multiple dots for continuous flow */
+        .current-dot:nth-child(2) {
+            animation-delay: 1s;
+        }
+        .current-dot:nth-child(3) {
+            animation-delay: 2s;
+        }
+        .current-dot:nth-child(4) {
+            animation-delay: 3s;
         }
     </style>
 </head>
 <body>
 
-    <!-- User Information Display (removed session ID display) -->
-    <!-- <div id="user-info-display" class="user-info hidden">
-        ID de Sesión: <span id="display-user-id"></span>
-    </div> -->
-
-    <!-- Initial Screen: Username Input -->
+    <!-- Initial Screen -->
     <div id="initial-screen" class="initial-screen">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6">Bienvenido a los Simuladores de Ley de Ohm</h2>
+        <!-- Recreated Image as SVG for main title -->
+        <svg class="main-logo-svg" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#4B0082;stop-opacity:1" /> <!-- Indigo/Purple -->
+                    <stop offset="50%" style="stop-color:#FF8C00;stop-opacity:1" /> <!-- DarkOrange -->
+                    <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" /> <!-- Gold -->
+                </linearGradient>
+            </defs>
+            <text x="50%" y="70" text-anchor="middle" font-size="60px" class="main-title">LEY DE OHM</text>
+            <text x="50%" y="110" text-anchor="middle" font-size="20px" class="subtitle">SIMULADORES PARA VERIFICAR TUS RESPUESTAS</text>
+            <line x1="100" y1="150" x2="700" y2="150" class="gradient-line" stroke="url(#lineGradient)"/>
+            <circle cx="700" cy="150" r="15" fill="url(#lineGradient)" opacity="0.8"/>
+        </svg>
+
+        <!-- Ohm's Law Triangle Animation -->
+        <svg class="ohm-triangle-container" viewBox="0 0 200 180">
+            <!-- Triangle outline -->
+            <polygon points="100,10 10,170 190,170" class="ohm-triangle-base" />
+
+            <!-- Divider lines -->
+            <line x1="10" y1="170" x2="190" y2="170" class="ohm-triangle-divider" />
+            <line x1="100" y1="10" x2="100" y2="170" class="ohm-triangle-divider" />
+
+            <!-- Text elements V, I, R -->
+            <text x="100" y="70" class="ohm-triangle-text">V</text>
+            <text x="55" y="145" class="ohm-triangle-text">I</text>
+            <text x="145" y="145" class="ohm-triangle-text">R</text>
+
+            <!-- Animated dots representing current flow -->
+            <circle cx="100" cy="10" r="5" class="current-dot"/>
+            <circle cx="100" cy="10" r="5" class="current-dot" style="animation-delay: 1s;"/>
+            <circle cx="100" cy="10" r="5" class="current-dot" style="animation-delay: 2s;"/>
+            <circle cx="100" cy="10" r="5" class="current-dot" style="animation-delay: 3s;"/>
+        </svg>
+
         <button id="start-simulators-btn" class="btn">Iniciar Simuladores</button>
     </div>
 
@@ -284,21 +385,21 @@
     <div id="app" class="simulator-container hidden">
         <!-- Simulator 1: Calculate Voltaje (V) -->
         <div id="sim-voltage" class="simulator-screen">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Simulador: Calcula el Voltaje (V)</h2>
-            <p class="text-lg text-gray-700 mb-8">Ajusta los valores de corriente (I) y resistencia (R) para calcular automáticamente el voltaje (V).</p>
+            <h2 class="text-3xl font-bold text-white mb-6">Simulador: Calcula el Voltaje (V)</h2>
+            <p class="text-lg text-gray-300 mb-8">Ajusta los valores de corriente (I) y resistencia (R) para calcular automáticamente el voltaje (V).</p>
 
             <div class="formula">
-                <span style="color: #00008B;">V</span>
+                <span style="color: #ADD8E6;">V</span>
                 <span>=</span>
-                <span style="font-size: 2.5rem; color: #333;">I</span>
-                <span style="color: #00008B;">R</span>
+                <span style="font-size: 2.5rem; color: #E0E0E0;">I</span>
+                <span style="color: #ADD8E6;">R</span>
             </div>
 
             <!-- Circuit Diagram -->
             <div class="circuit-diagram">
                 <svg viewBox="0 0 300 180">
                     <!-- Wires -->
-                    <rect x="20" y="20" width="260" height="140" fill="none" stroke="#333" stroke-width="4" rx="10" ry="10"/>
+                    <rect x="20" y="20" width="260" height="140" fill="none" stroke="#ccc" stroke-width="4" rx="10" ry="10"/>
                     <line x1="20" y1="20" x2="20" y2="160" class="wire"/>
                     <line x1="20" y1="160" x2="280" y2="160" class="wire"/>
                     <line x1="280" y1="160" x2="280" y2="20" class="wire"/>
@@ -322,7 +423,7 @@
                     <text x="80" y="120" class="current-text">corriente = <tspan id="current-val-sim1">0.0</tspan> mA</text>
 
                     <!-- Animated dots for current flow in the resistor-like element-->
-                    <rect x="40" y="130" width="220" height="15" rx="5" ry="5" fill="#fefcbf" stroke="#ff9800" stroke-width="2"/>
+                    <rect x="40" y="130" width="220" height="15" rx="5" ry="5" fill="#5F4B30" stroke="#FF8C00" stroke-width="2"/>
                     <circle cx="50" cy="137.5" r="3" class="animated-dots"/>
                     <circle cx="80" cy="137.5" r="3" class="animated-dots" style="animation-delay: 0.4s;"/>
                     <circle cx="110" cy="137.5" r="3" class="animated-dots" style="animation-delay: 0.8s;"/>
@@ -359,21 +460,21 @@
 
         <!-- Simulator 2: Calculate Current (I) -->
         <div id="sim-current" class="simulator-screen hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Simulador: Calcula la Corriente (I)</h2>
-            <p class="text-lg text-gray-700 mb-8">Modifica voltaje y resistencia para observar la corriente resultante.</p>
+            <h2 class="text-3xl font-bold text-white mb-6">Simulador: Calcula la Corriente (I)</h2>
+            <p class="text-lg text-gray-300 mb-8">Modifica voltaje y resistencia para observar la corriente resultante.</p>
 
             <div class="formula">
-                <span style="font-size: 2.5rem; color: #333;">I</span>
+                <span style="font-size: 2.5rem; color: #E0E0E0;">I</span>
                 <span>=</span>
-                <span style="color: #00008B;">V</span>
+                <span style="color: #ADD8E6;">V</span>
                 <span>/</span>
-                <span style="color: #00008B;">R</span>
+                <span style="color: #ADD8E6;">R</span>
             </div>
 
              <!-- Circuit Diagram (simplified, similar to Sim 1) -->
              <div class="circuit-diagram">
                 <svg viewBox="0 0 300 180">
-                    <rect x="20" y="20" width="260" height="140" fill="none" stroke="#333" stroke-width="4" rx="10" ry="10"/>
+                    <rect x="20" y="20" width="260" height="140" fill="none" stroke="#ccc" stroke-width="4" rx="10" ry="10"/>
                     <line x1="20" y1="20" x2="20" y2="160" class="wire"/>
                     <line x1="20" y1="160" x2="280" y2="160" class="wire"/>
                     <line x1="280" y1="160" x2="280" y2="20" class="wire"/>
@@ -392,7 +493,7 @@
                     <text x="80" y="120" class="current-text">corriente = <tspan id="current-result">0.0</tspan> A</text>
 
                     <!-- Animated dots for current flow -->
-                    <rect x="40" y="130" width="220" height="15" rx="5" ry="5" fill="#fefcbf" stroke="#ff9800" stroke-width="2"/>
+                    <rect x="40" y="130" width="220" height="15" rx="5" ry="5" fill="#5F4B30" stroke="#FF8C00" stroke-width="2"/>
                     <circle cx="50" cy="137.5" r="3" class="animated-dots"/>
                     <circle cx="80" cy="137.5" r="3" class="animated-dots" style="animation-delay: 0.4s;"/>
                     <circle cx="110" cy="137.5" r="3" class="animated-dots" style="animation-delay: 0.8s;"/>
@@ -428,21 +529,21 @@
 
         <!-- Simulator 3: Calculate Resistance (R) -->
         <div id="sim-resistance" class="simulator-screen hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Simulador: Calcula la Resistencia (R)</h2>
-            <p class="text-lg text-gray-700 mb-8">Cambia los valores de voltaje y corriente para ver cómo varía la resistencia.</p>
+            <h2 class="text-3xl font-bold text-white mb-6">Simulador: Calcula la Resistencia (R)</h2>
+            <p class="text-lg text-gray-300 mb-8">Cambia los valores de voltaje y corriente para ver cómo varía la resistencia.</p>
 
             <div class="formula">
-                <span style="color: #00008B;">R</span>
+                <span style="color: #ADD8E6;">R</span>
                 <span>=</span>
-                <span style="color: #00008B;">V</span>
+                <span style="color: #ADD8E6;">V</span>
                 <span>/</span>
-                <span style="font-size: 2.5rem; color: #333;">I</span>
+                <span style="font-size: 2.5rem; color: #E0E0E0;">I</span>
             </div>
 
             <!-- Circuit Diagram (simplified, similar to Sim 1) -->
             <div class="circuit-diagram">
                 <svg viewBox="0 0 300 180">
-                    <rect x="20" y="20" width="260" height="140" fill="none" stroke="#333" stroke-width="4" rx="10" ry="10"/>
+                    <rect x="20" y="20" width="260" height="140" fill="none" stroke="#ccc" stroke-width="4" rx="10" ry="10"/>
                     <line x1="20" y1="20" x2="20" y2="160" class="wire"/>
                     <line x1="20" y1="160" x2="280" y2="160" class="wire"/>
                     <line x1="280" y1="160" x2="280" y2="20" class="wire"/>
@@ -461,7 +562,7 @@
                     <text x="80" y="120" class="current-text">corriente = <tspan id="current-val-sim3">0.0</tspan> A</text>
 
                     <!-- Animated dots for current flow -->
-                    <rect x="40" y="130" width="220" height="15" rx="5" ry="5" fill="#fefcbf" stroke="#ff9800" stroke-width="2"/>
+                    <rect x="40" y="130" width="220" height="15" rx="5" ry="5" fill="#5F4B30" stroke="#FF8C00" stroke-width="2"/>
                     <circle cx="50" cy="137.5" r="3" class="animated-dots"/>
                     <circle cx="80" cy="137.5" r="3" class="animated-dots" style="animation-delay: 0.4s;"/>
                     <circle cx="110" cy="137.5" r="3" class="animated-dots" style="animation-delay: 0.8s;"/>
@@ -496,7 +597,7 @@
 
         <!-- Activities Section -->
         <div id="activities-section" class="activities-section hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Actividades: Resultados Guardados</h2>
+            <h2 class="text-3xl font-bold text-white mb-6">Actividades: Resultados Guardados</h2>
             <ul id="saved-results-list" class="activities-list">
                 <!-- Saved results will be displayed here -->
                 <li class="text-gray-500">No hay resultados guardados todavía.</li>
@@ -510,14 +611,10 @@
     <script>
         // Array para almacenar los resultados en memoria
         let savedResultsInMemory = [];
-        // Removed sessionId variable and associated display elements
 
         // Elementos principales de la interfaz
         let initialScreen, simVoltage, simCurrent, simResistance, activitiesSection, savedResultsList;
         let startSimulatorsBtn, nextSimBtnV, nextSimBtnI, goToActivitiesBtnR, backToSimsBtn;
-        // Removed displayUserId, userInfoDisplay
-
-        // Removed displaySessionId function
 
         // Función para guardar resultados en memoria
         function saveSimulatorResult(simulatorType, inputValues, calculatedResult) {
@@ -638,7 +735,6 @@
             if (initialScreen) initialScreen.classList.add('hidden');
             if (app) app.classList.remove('hidden'); // Show main app container
             if (simVoltage) simVoltage.classList.remove('hidden'); // Show first simulator
-            // Removed displaySessionId(sessionId);
         }
 
         // Initialize elements and event listeners after DOM is loaded
@@ -646,10 +742,6 @@
             // Get initial screen elements
             initialScreen = document.getElementById('initial-screen');
             startSimulatorsBtn = document.getElementById('start-simulators-btn');
-
-            // Get user info display elements (removed references to displayUserId, userInfoDisplay)
-            // displayUserId = document.getElementById('display-user-id');
-            // userInfoDisplay = document.getElementById('user-info-display');
 
             // Set up event listener for the start button
             if (startSimulatorsBtn) startSimulatorsBtn.addEventListener('click', handleStartSimulators);
@@ -785,7 +877,6 @@
                 if (initialScreen) initialScreen.classList.remove('hidden'); // Show the initial screen
                 
                 clearAllSavedResults(); // Clear results when returning to start
-                // Removed sessionId generation and display
             });
         };
 
