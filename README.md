@@ -1,4 +1,4 @@
-<html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -431,10 +431,8 @@
                     <circle cx="170" cy="137.5" r="3" class="animated-dots" style="animation-delay: 1.6s;"/>
                     <circle cx="200" cy="137.5" r="3" class="animated-dots" style="animation-delay: 2.0s;"/>
                     <circle cx="230" cy="137.5" r="3" class="animated-dots" style="animation-delay: 2.4s;"/>
-
                 </svg>
             </div>
-
 
             <div class="flex justify-around items-end mt-8">
                 <div class="slider-group">
