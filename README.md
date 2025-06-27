@@ -270,15 +270,12 @@
 
     <!-- User Information Display (visible on all simulator screens) -->
     <div id="user-info-display" class="user-info hidden">
-        ID de Usuario: <span id="display-user-id"></span><br>
-        Nombre: <span id="display-username"></span>
+        ID de Usuario: <span id="display-user-id"></span>
     </div>
 
     <!-- Initial Screen: Username Input -->
     <div id="initial-screen" class="initial-screen">
         <h2 class="text-3xl font-bold text-gray-800 mb-6">Bienvenido a los Simuladores de Ley de Ohm</h2>
-        <p class="text-lg text-gray-700 mb-8">Por favor, introduce tu nombre para comenzar:</p>
-        <input type="text" id="username-input" placeholder="Tu nombre">
         <button id="start-simulators-btn" class="btn">Iniciar Simuladores</button>
     </div>
 
@@ -525,7 +522,7 @@
         let auth;
         let db;
         let userId = null; // Initialize as null
-        let username = null; // Store username here
+        // Removed username variable as it's no longer collected from user input
 
         // Initialize Firebase
         const initFirebase = async () => {
@@ -540,8 +537,7 @@
                         if (user) {
                             userId = user.uid;
                             console.log("Firebase initialized. User ID:", userId);
-                            // Attempt to load username if exists
-                            await loadUsername();
+                            displayUserInfo(userId); // Display user ID
                         } else {
                             // If no user, sign in anonymously or with custom token
                             if (initialAuthToken) {
@@ -563,44 +559,23 @@
                 } else {
                     console.warn("Firebase config is empty. Skipping Firebase initialization.");
                     userId = crypto.randomUUID(); // Set userId even if Firebase is skipped
-                    displayUserInfo(userId, "Invitado"); // Display "Guest" if no Firebase
+                    displayUserInfo(userId); // Display "Guest" if no Firebase
                 }
             } catch (error) {
                 console.error("Error during Firebase authentication fallback:", error);
                 userId = crypto.randomUUID(); // Ensure userId is always set
-                displayUserInfo(userId, "Invitado"); // Display "Guest" if auth fails
+                displayUserInfo(userId); // Display "Guest" if auth fails
             }
         };
 
-        // Function to load username from Firestore
-        async function loadUsername() {
-            if (!db || !userId) return;
-            try {
-                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}`);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    username = userDocSnap.data().username;
-                    console.log("Username loaded:", username);
-                } else {
-                    username = null; // No username found
-                    console.log("No username found for this user.");
-                }
-                displayUserInfo(userId, username); // Update UI with loaded or default username
-            } catch (e) {
-                console.error("Error loading username: ", e);
-                username = null;
-                displayUserInfo(userId, "Error al cargar");
-            }
-        }
+        // Removed loadUsername function as username is no longer explicitly stored per user
 
-        // Function to display user info in the UI
-        function displayUserInfo(id, name) {
+        // Function to display user info in the UI (only User ID now)
+        function displayUserInfo(id) {
             const displayUserId = document.getElementById('display-user-id');
-            const displayUsername = document.getElementById('display-username');
             const userInfoDisplay = document.getElementById('user-info-display');
 
             if (displayUserId) displayUserId.textContent = id;
-            if (displayUsername) displayUsername.textContent = name || "N/A"; // Show N/A if name is null/empty
             if (userInfoDisplay) userInfoDisplay.classList.remove('hidden'); // Make it visible
         }
 
@@ -618,8 +593,8 @@
                     simulatorType: simulatorType,
                     timestamp: new Date(),
                     inputValues: inputValues,
-                    calculatedResult: calculatedResult,
-                    username: username || 'Invitado' // Add username here
+                    calculatedResult: calculatedResult
+                    // Removed username field here
                 });
                 alert(`Resultado de ${simulatorType} guardado exitosamente!`);
             } catch (e) {
@@ -752,46 +727,24 @@
 
         // --- Navigation Logic ---
         let initialScreen, simVoltage, simCurrent, simResistance, activitiesSection, savedResultsList;
-        let usernameInput, startSimulatorsBtn, nextSimBtnV, nextSimBtnI, goToActivitiesBtnR, backToSimsBtn;
-        let displayUserId, displayUsername, userInfoDisplay;
+        let startSimulatorsBtn, nextSimBtnV, nextSimBtnI, goToActivitiesBtnR, backToSimsBtn;
+        let displayUserId, userInfoDisplay; // Removed displayUsername and usernameInput
 
-        // Function to handle starting simulators after username input
+        // Function to handle starting simulators (simplified)
         async function handleStartSimulators() {
-            const enteredUsername = usernameInput.value.trim();
-            if (!enteredUsername) {
-                alert("Por favor, introduce un nombre de usuario para continuar.");
-                return;
-            }
-
-            // Ensure Firebase is initialized and userId is available before saving username
+            // No username input to validate now
+            
+            // Ensure Firebase is initialized and userId is available before proceeding
             if (!userId) {
                 console.warn("Firebase user ID not yet available. Retrying after authentication state change.");
-                // For simplicity, we'll proceed, but Firebase operations might fail if not ready.
-                // In a production app, you might want a more robust loading state or retry mechanism.
                 alert("Iniciando sesión en el sistema... por favor, inténtelo de nuevo en un momento.");
                 return; // Prevent further execution until userId is set by onAuthStateChanged
             }
 
-            if (db && userId) {
-                try {
-                    // Save username to Firestore
-                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}`);
-                    await setDoc(userDocRef, { username: enteredUsername }, { merge: true });
-                    username = enteredUsername; // Set local username
-                    displayUserInfo(userId, username); // Update UI
-
-                    // Transition to the first simulator
-                    if (initialScreen) initialScreen.classList.add('hidden');
-                    if (app) app.classList.remove('hidden'); // Show main app container
-                    if (simVoltage) simVoltage.classList.remove('hidden'); // Show first simulator
-                } catch (e) {
-                    console.error("Error saving username: ", e);
-                    alert("Error al guardar el nombre de usuario. Por favor, intente de nuevo.");
-                }
-            } else {
-                alert("La base de datos no está lista. Por favor, inténtelo de nuevo.");
-                console.error("Firestore is not available to save username.");
-            }
+            // Transition to the first simulator
+            if (initialScreen) initialScreen.classList.add('hidden');
+            if (app) app.classList.remove('hidden'); // Show main app container
+            if (simVoltage) simVoltage.classList.remove('hidden'); // Show first simulator
         }
 
 
@@ -799,12 +752,10 @@
         window.onload = function() {
             // Get initial screen elements
             initialScreen = document.getElementById('initial-screen');
-            usernameInput = document.getElementById('username-input');
             startSimulatorsBtn = document.getElementById('start-simulators-btn');
 
             // Get user info display elements
             displayUserId = document.getElementById('display-user-id');
-            displayUsername = document.getElementById('display-username');
             userInfoDisplay = document.getElementById('user-info-display');
 
             // Set up event listener for the start button
@@ -812,7 +763,7 @@
 
 
             // Initialize Firebase first
-            initFirebase(); // This will eventually set userId and call loadUsername/displayUserInfo
+            initFirebase(); // This will eventually set userId and call displayUserInfo
 
             // All other simulator elements and navigation elements
             // Simulator 1 Elements
@@ -942,10 +893,8 @@
                         
                         // Display only the simulator type and the calculated result
                         const timestamp = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-                        const displayUsernameText = data.username ? data.username : 'Invitado'; // Use the username from saved data or 'Invitado'
-
+                        // Removed username display, now only shows "Usuario: [ID de usuario]" implicitly from top display
                         li.innerHTML = `
-                            <strong>Usuario:</strong> ${displayUsernameText} <br>
                             <strong>Simulador:</strong> ${data.simulatorType.charAt(0).toUpperCase() + data.simulatorType.slice(1)} <br>
                             <strong>Resultado:</strong> ${data.calculatedResult.label} = ${data.calculatedResult.value.toFixed(2)} ${data.calculatedResult.unit} <br>
                             <span class="text-xs text-gray-400">Guardado el: ${timestamp}</span>
@@ -959,12 +908,11 @@
                 }
             });
 
-            // Modified backToSimsBtn listener
+            // Modified backToSimsBtn listener to reset to initial screen and sign out
             if (backToSimsBtn) backToSimsBtn.addEventListener('click', async () => {
                 if (activitiesSection) activitiesSection.classList.add('hidden');
                 if (app) app.classList.add('hidden'); // Hide the main simulator container
                 if (initialScreen) initialScreen.classList.remove('hidden'); // Show the initial screen
-                if (usernameInput) usernameInput.value = ''; // Clear the username input field
                 
                 // Sign out the current user and reset local user info
                 if (auth) {
@@ -972,10 +920,9 @@
                     console.log("User signed out.");
                 }
                 userId = null;
-                username = null;
+                // username variable is no longer needed/used
                 if (userInfoDisplay) userInfoDisplay.classList.add('hidden'); // Hide user info display
                 if (displayUserId) displayUserId.textContent = '';
-                if (displayUsername) displayUsername.textContent = '';
             });
         };
 
