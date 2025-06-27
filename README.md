@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js CDN for sound generation -->
+    <script src="https://unpkg.com/tone@14.7.58/build/Tone.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -434,6 +436,7 @@
                 </svg>
             </div>
 
+
             <div class="flex justify-around items-end mt-8">
                 <div class="slider-group">
                     <label for="current-slider-v">Corriente (I): <span id="current-value-v">0.1</span> A</label>
@@ -614,6 +617,68 @@
         let initialScreen, simVoltage, simCurrent, simResistance, activitiesSection, savedResultsList;
         let startSimulatorsBtn, nextSimBtnV, nextSimBtnI, goToActivitiesBtnR, backToSimsBtn;
 
+        // Tone.js oscillator for electricity sound
+        let electricitySynth = null; // Initialize as null
+        let timeoutId;
+
+        // Instantiate the synth when the script loads, but don't start it yet.
+        try {
+            electricitySynth = new Tone.Oscillator({
+                frequency: 200, // Starting frequency for the buzz
+                type: "sine",
+                volume: -20 // Start with a low volume
+            }).toDestination();
+            console.log("Tone.js Oscillator initialized.");
+        } catch (e) {
+            console.error("Tone.js Oscillator could not be initialized:", e);
+            // If initialization fails, electricitySynth remains null, and sound functions will gracefully skip.
+        }
+
+        // Function to play sound
+        function playElectricitySound() {
+            if (!electricitySynth) {
+                console.warn("Electricity synth not initialized. Skipping sound playback.");
+                return;
+            }
+
+            // Ensure audio context is started by a user gesture first
+            if (Tone.context.state !== 'running') {
+                Tone.start().then(() => {
+                    console.log("Tone.js audio context started.");
+                    // After context started, try playing sound again
+                    playElectricitySoundInternal();
+                }).catch(e => console.error("Error starting Tone.js audio context:", e));
+            } else {
+                playElectricitySoundInternal();
+            }
+        }
+
+        // Internal function to actually play the sound after context is ready
+        function playElectricitySoundInternal() {
+            if (!electricitySynth) return; // Guard for safety if initialization failed
+            
+            if (electricitySynth.state !== "started") {
+                electricitySynth.start();
+            }
+            // Use Math.random() for frequency variation, mapping to 190-210 Hz
+            const randomFreq = 190 + (Math.random() * 20); // Random number between 190 and 210
+            electricitySynth.frequency.rampTo(randomFreq, 0.1);
+            electricitySynth.volume.rampTo(-12, 0.1); // Increased volume from -15 to -12
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                electricitySynth.volume.rampTo(-37, 0.5); // Increased faded volume from -40 to -37
+                electricitySynth.stop('+0.5'); // Stop after fade out
+            }, 100); // Stop after 100ms of no movement
+        }
+
+        // Function to handle starting simulators
+        function handleStartSimulators() {
+            // Tone.start() is now handled within playElectricitySound if not running
+            if (initialScreen) initialScreen.classList.add('hidden');
+            if (app) app.classList.remove('hidden'); // Show main app container
+            if (simVoltage) simVoltage.classList.remove('hidden'); // Show first simulator
+        }
+
         // Función para guardar resultados en memoria
         function saveSimulatorResult(simulatorType, inputValues, calculatedResult) {
             savedResultsInMemory.push({
@@ -649,6 +714,8 @@
             // Update circuit diagram labels
             currentValSim1.textContent = (I * 1000).toFixed(1); // Convert A to mA for display
             resistorValSim1.textContent = R.toFixed(0) + ' Ω';
+
+            playElectricitySound(); // Play sound on update
         }
 
         function resetVoltageSimulator() {
@@ -687,6 +754,8 @@
             } else {
                 warningIconI.classList.add('hidden');
             }
+
+            playElectricitySound(); // Play sound on update
         }
 
         function resetCurrentSimulator() {
@@ -718,6 +787,8 @@
             voltageValSim3.textContent = V.toFixed(0) + ' V';
             currentValSim3.textContent = I.toFixed(1);
             resistanceResultDisplaySim3.textContent = R.toFixed(2) + ' Ω';
+
+            playElectricitySound(); // Play sound on update
         }
 
         function resetResistanceSimulator() {
@@ -728,13 +799,6 @@
             clearAllSavedResults(); // Clear saved results in memory
         }
 
-        // Function to handle starting simulators
-        function handleStartSimulators() {
-            if (initialScreen) initialScreen.classList.add('hidden');
-            if (app) app.classList.remove('hidden'); // Show main app container
-            if (simVoltage) simVoltage.classList.remove('hidden'); // Show first simulator
-        }
-
         // Initialize elements and event listeners after DOM is loaded
         window.onload = function() {
             // Get initial screen elements
@@ -742,6 +806,7 @@
             startSimulatorsBtn = document.getElementById('start-simulators-btn');
 
             // Set up event listener for the start button
+            // Note: Audio context must be started by a user gesture, so initAudio is called here
             if (startSimulatorsBtn) startSimulatorsBtn.addEventListener('click', handleStartSimulators);
 
             // All other simulator elements and navigation elements
