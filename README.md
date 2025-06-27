@@ -18,7 +18,7 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .simulator-container {
+        .simulator-container, .initial-screen {
             background-color: #fff;
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -230,12 +230,61 @@
         .activities-list li strong {
             color: #4C51BF;
         }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #e2e8f0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #2D3748;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .initial-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .initial-screen input[type="text"] {
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            width: 70%;
+            max-width: 300px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .initial-screen .btn {
+            margin-top: 20px;
+            width: auto;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Main application container -->
-    <div id="app" class="simulator-container">
+    <!-- User Information Display (visible on all simulator screens) -->
+    <div id="user-info-display" class="user-info hidden">
+        ID de Usuario: <span id="display-user-id"></span><br>
+        Nombre: <span id="display-username"></span>
+    </div>
+
+    <!-- Initial Screen: Username Input -->
+    <div id="initial-screen" class="initial-screen">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Bienvenido a los Simuladores de Ley de Ohm</h2>
+        <p class="text-lg text-gray-700 mb-8">Por favor, introduce tu nombre para comenzar:</p>
+        <input type="text" id="username-input" placeholder="Tu nombre">
+        <button id="start-simulators-btn" class="btn">Iniciar Simuladores</button>
+    </div>
+
+
+    <!-- Main application container (hidden by default) -->
+    <div id="app" class="simulator-container hidden">
         <!-- Simulator 1: Calculate Voltaje (V) -->
         <div id="sim-voltage" class="simulator-screen">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">Simulador: Calcula el Voltaje (V)</h2>
@@ -442,7 +491,7 @@
             </div>
 
             <div class="flex justify-center mt-10 space-x-4">
-                <button id="save-values-btn-r" class="btn">Guardar este resultado</button> <!-- Added button here -->
+                <button id="save-values-btn-r" class="btn">Guardar este resultado</button> 
                 <button id="go-to-activities-btn-r" class="btn">Ir a actividades</button>
                 <button id="reset-sim-btn-r" class="btn">Reiniciar simulador</button>
             </div>
@@ -464,8 +513,8 @@
     <script type="module">
         // Firebase setup (mandatory, even if not used for persistence yet)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -475,7 +524,8 @@
         let app;
         let auth;
         let db;
-        let userId;
+        let userId = null; // Initialize as null
+        let username = null; // Store username here
 
         // Initialize Firebase
         const initFirebase = async () => {
@@ -485,35 +535,74 @@
                     auth = getAuth(app);
                     db = getFirestore(app);
 
-                    // Attempt custom token sign-in first, with a fallback
-                    if (initialAuthToken) {
-                        try {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                            console.log("Signed in with custom token.");
-                        } catch (customTokenError) {
-                            console.warn("Failed to sign in with custom token, attempting anonymous sign-in:", customTokenError.code, customTokenError.message);
-                            // Fallback to anonymous sign-in if custom token fails
-                            await signInAnonymously(auth);
-                            console.log("Signed in anonymously after custom token failure.");
+                    // Listen for auth state changes to get the user ID
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            console.log("Firebase initialized. User ID:", userId);
+                            // Attempt to load username if exists
+                            await loadUsername();
+                        } else {
+                            // If no user, sign in anonymously or with custom token
+                            if (initialAuthToken) {
+                                try {
+                                    await signInWithCustomToken(auth, initialAuthToken);
+                                    console.log("Signed in with custom token.");
+                                } catch (customTokenError) {
+                                    console.warn("Failed to sign in with custom token, attempting anonymous sign-in:", customTokenError.code, customTokenError.message);
+                                    await signInAnonymously(auth);
+                                    console.log("Signed in anonymously after custom token failure.");
+                                }
+                            } else {
+                                await signInAnonymously(auth);
+                                console.log("Signed in anonymously.");
+                            }
                         }
-                    } else {
-                        // If no initial token, sign in anonymously directly
-                        await signInAnonymously(auth);
-                        console.log("Signed in anonymously.");
-                    }
-                    // After successful sign-in (custom or anonymous), set userId
-                    userId = auth.currentUser?.uid || crypto.randomUUID();
-                    console.log("Firebase initialized. User ID:", userId);
+                    });
 
                 } else {
                     console.warn("Firebase config is empty. Skipping Firebase initialization.");
                     userId = crypto.randomUUID(); // Set userId even if Firebase is skipped
+                    displayUserInfo(userId, "Invitado"); // Display "Guest" if no Firebase
                 }
             } catch (error) {
                 console.error("Error during Firebase authentication fallback:", error);
                 userId = crypto.randomUUID(); // Ensure userId is always set
+                displayUserInfo(userId, "Invitado"); // Display "Guest" if auth fails
             }
         };
+
+        // Function to load username from Firestore
+        async function loadUsername() {
+            if (!db || !userId) return;
+            try {
+                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}`);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    username = userDocSnap.data().username;
+                    console.log("Username loaded:", username);
+                } else {
+                    username = null; // No username found
+                    console.log("No username found for this user.");
+                }
+                displayUserInfo(userId, username); // Update UI with loaded or default username
+            } catch (e) {
+                console.error("Error loading username: ", e);
+                username = null;
+                displayUserInfo(userId, "Error al cargar");
+            }
+        }
+
+        // Function to display user info in the UI
+        function displayUserInfo(id, name) {
+            const displayUserId = document.getElementById('display-user-id');
+            const displayUsername = document.getElementById('display-username');
+            const userInfoDisplay = document.getElementById('user-info-display');
+
+            if (displayUserId) displayUserId.textContent = id;
+            if (displayUsername) displayUsername.textContent = name || "N/A"; // Show N/A if name is null/empty
+            if (userInfoDisplay) userInfoDisplay.classList.remove('hidden'); // Make it visible
+        }
 
         // Function to save simulator results to Firestore
         async function saveSimulatorResult(simulatorType, inputValues, calculatedResult) {
@@ -529,12 +618,40 @@
                     simulatorType: simulatorType,
                     timestamp: new Date(),
                     inputValues: inputValues,
-                    calculatedResult: calculatedResult
+                    calculatedResult: calculatedResult,
+                    username: username || 'Invitado' // Add username here
                 });
                 alert(`Resultado de ${simulatorType} guardado exitosamente!`);
             } catch (e) {
                 console.error("Error adding document: ", e);
                 alert("Error al guardar el resultado. Por favor, revise la consola para más detalles.");
+            }
+        }
+
+        // Function to clear all saved results from Firestore
+        async function clearAllSavedResults() {
+            if (!db || !userId) {
+                console.warn("Firestore o ID de usuario no inicializado para borrar resultados.");
+                return;
+            }
+
+            try {
+                const resultsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/simulatorResults`);
+                const querySnapshot = await getDocs(query(resultsCollectionRef));
+                
+                if (!querySnapshot.empty) {
+                    const deletePromises = querySnapshot.docs.map(docToDelete => deleteDoc(docToDelete.ref)); 
+                    await Promise.all(deletePromises);
+                    console.log("Todos los resultados guardados han sido borrados.");
+                    if (savedResultsList) {
+                        savedResultsList.innerHTML = '<li class="text-gray-500">No hay resultados guardados todavía.</li>';
+                    }
+                } else {
+                    console.log("No hay resultados guardados para borrar.");
+                }
+            } catch (e) {
+                console.error("Error al borrar resultados guardados: ", e);
+                alert("Error al borrar los resultados guardados. Por favor, revise la consola para más detalles.");
             }
         }
 
@@ -555,11 +672,12 @@
             resistorValSim1.textContent = R.toFixed(0) + ' Ω';
         }
 
-        function resetVoltageSimulator() {
+        async function resetVoltageSimulator() {
             if (!currentSliderV || !resistanceSliderV) return;
             currentSliderV.value = currentSliderV.min; // Reset to min value
             resistanceSliderV.value = resistanceSliderV.min; // Reset to min value
             updateVoltage(); // Update display with reset values
+            await clearAllSavedResults(); // Clear saved results
         }
 
         // --- Simulator 2: Calculate Current (I) ---
@@ -593,11 +711,12 @@
             }
         }
 
-        function resetCurrentSimulator() {
+        async function resetCurrentSimulator() {
             if (!voltageSliderI || !resistanceSliderI) return;
             voltageSliderI.value = voltageSliderI.min; // Reset to min value
             resistanceSliderI.value = resistanceSliderI.min; // Reset to min value
             updateCurrent(); // Update display with reset values
+            await clearAllSavedResults(); // Clear saved results
         }
 
         // --- Simulator 3: Calculate Resistance (R) ---
@@ -623,21 +742,79 @@
             resistanceResultDisplaySim3.textContent = R.toFixed(2) + ' Ω';
         }
 
-        function resetResistanceSimulator() {
+        async function resetResistanceSimulator() {
             if (!voltageSliderR || !currentSliderR) return;
             voltageSliderR.value = voltageSliderR.min; // Reset to min value
             currentSliderR.value = currentSliderR.min; // Reset to min value
             updateResistance(); // Update display with reset values
+            await clearAllSavedResults(); // Clear saved results
         }
 
         // --- Navigation Logic ---
-        let simVoltage, simCurrent, simResistance, activitiesSection, savedResultsList;
-        let nextSimBtnV, nextSimBtnI, goToActivitiesBtnR, backToSimsBtn;
+        let initialScreen, simVoltage, simCurrent, simResistance, activitiesSection, savedResultsList;
+        let usernameInput, startSimulatorsBtn, nextSimBtnV, nextSimBtnI, goToActivitiesBtnR, backToSimsBtn;
+        let displayUserId, displayUsername, userInfoDisplay;
+
+        // Function to handle starting simulators after username input
+        async function handleStartSimulators() {
+            const enteredUsername = usernameInput.value.trim();
+            if (!enteredUsername) {
+                alert("Por favor, introduce un nombre de usuario para continuar.");
+                return;
+            }
+
+            // Ensure Firebase is initialized and userId is available before saving username
+            if (!userId) {
+                console.warn("Firebase user ID not yet available. Retrying after authentication state change.");
+                // For simplicity, we'll proceed, but Firebase operations might fail if not ready.
+                // In a production app, you might want a more robust loading state or retry mechanism.
+                alert("Iniciando sesión en el sistema... por favor, inténtelo de nuevo en un momento.");
+                return; // Prevent further execution until userId is set by onAuthStateChanged
+            }
+
+            if (db && userId) {
+                try {
+                    // Save username to Firestore
+                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}`);
+                    await setDoc(userDocRef, { username: enteredUsername }, { merge: true });
+                    username = enteredUsername; // Set local username
+                    displayUserInfo(userId, username); // Update UI
+
+                    // Transition to the first simulator
+                    if (initialScreen) initialScreen.classList.add('hidden');
+                    if (app) app.classList.remove('hidden'); // Show main app container
+                    if (simVoltage) simVoltage.classList.remove('hidden'); // Show first simulator
+                } catch (e) {
+                    console.error("Error saving username: ", e);
+                    alert("Error al guardar el nombre de usuario. Por favor, intente de nuevo.");
+                }
+            } else {
+                alert("La base de datos no está lista. Por favor, inténtelo de nuevo.");
+                console.error("Firestore is not available to save username.");
+            }
+        }
+
 
         // Initialize elements and event listeners after DOM is loaded
         window.onload = function() {
-            initFirebase();
+            // Get initial screen elements
+            initialScreen = document.getElementById('initial-screen');
+            usernameInput = document.getElementById('username-input');
+            startSimulatorsBtn = document.getElementById('start-simulators-btn');
 
+            // Get user info display elements
+            displayUserId = document.getElementById('display-user-id');
+            displayUsername = document.getElementById('display-username');
+            userInfoDisplay = document.getElementById('user-info-display');
+
+            // Set up event listener for the start button
+            if (startSimulatorsBtn) startSimulatorsBtn.addEventListener('click', handleStartSimulators);
+
+
+            // Initialize Firebase first
+            initFirebase(); // This will eventually set userId and call loadUsername/displayUserInfo
+
+            // All other simulator elements and navigation elements
             // Simulator 1 Elements
             currentSliderV = document.getElementById('current-slider-v');
             resistanceSliderV = document.getElementById('resistance-slider-v');
@@ -720,6 +897,9 @@
             nextSimBtnI = document.getElementById('next-sim-btn-i');
             goToActivitiesBtnR = document.getElementById('go-to-activities-btn-r');
             backToSimsBtn = document.getElementById('back-to-sims-btn');
+            // The main app container:
+            app = document.getElementById('app');
+
 
             // Navigation Event Listeners
             if (nextSimBtnV) nextSimBtnV.addEventListener('click', () => {
@@ -736,7 +916,7 @@
                 if (simResistance) simResistance.classList.add('hidden');
                 if (activitiesSection) activitiesSection.classList.remove('hidden');
                 
-                // Clear previous results
+                // Clear previous results display and show loading message
                 if (savedResultsList) savedResultsList.innerHTML = '<li class="text-gray-500">Cargando resultados...</li>';
 
                 if (!db || !userId) {
@@ -747,7 +927,7 @@
 
                 try {
                     const resultsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/simulatorResults`);
-                    const querySnapshot = await getDocs(query(resultsCollectionRef)); // No orderBy, as per instructions.
+                    const querySnapshot = await getDocs(query(resultsCollectionRef)); 
                     
                     if (savedResultsList) savedResultsList.innerHTML = ''; // Clear loading message
 
@@ -759,17 +939,14 @@
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
                         const li = document.createElement('li');
-                        let inputs = '';
-                        for (const key in data.inputValues) {
-                            inputs += `${key}=${data.inputValues[key]} ${key === 'I' ? 'A' : (key === 'R' ? 'Ω' : 'V')}, `;
-                        }
-                        inputs = inputs.slice(0, -2); // Remove trailing comma and space
-
+                        
+                        // Display only the simulator type and the calculated result
                         const timestamp = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+                        const displayUsernameText = data.username ? data.username : 'Invitado'; // Use the username from saved data or 'Invitado'
 
                         li.innerHTML = `
+                            <strong>Usuario:</strong> ${displayUsernameText} <br>
                             <strong>Simulador:</strong> ${data.simulatorType.charAt(0).toUpperCase() + data.simulatorType.slice(1)} <br>
-                            <strong>Entradas:</strong> ${inputs} <br>
                             <strong>Resultado:</strong> ${data.calculatedResult.label} = ${data.calculatedResult.value.toFixed(2)} ${data.calculatedResult.unit} <br>
                             <span class="text-xs text-gray-400">Guardado el: ${timestamp}</span>
                         `;
@@ -782,13 +959,27 @@
                 }
             });
 
-            if (backToSimsBtn) backToSimsBtn.addEventListener('click', () => {
+            // Modified backToSimsBtn listener
+            if (backToSimsBtn) backToSimsBtn.addEventListener('click', async () => {
                 if (activitiesSection) activitiesSection.classList.add('hidden');
-                if (simVoltage) simVoltage.classList.remove('hidden'); // Go back to the first simulator
+                if (app) app.classList.add('hidden'); // Hide the main simulator container
+                if (initialScreen) initialScreen.classList.remove('hidden'); // Show the initial screen
+                if (usernameInput) usernameInput.value = ''; // Clear the username input field
+                
+                // Sign out the current user and reset local user info
+                if (auth) {
+                    await signOut(auth);
+                    console.log("User signed out.");
+                }
+                userId = null;
+                username = null;
+                if (userInfoDisplay) userInfoDisplay.classList.add('hidden'); // Hide user info display
+                if (displayUserId) displayUserId.textContent = '';
+                if (displayUsername) displayUsername.textContent = '';
             });
         };
 
     </script>
 </body>
-</html>
+ </html>
   ELABORADO POR:KEVIN PERALTA
